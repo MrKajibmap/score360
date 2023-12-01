@@ -74,27 +74,17 @@ if __name__ == '__main__':
                                                , sheet_name='Оценка разработчиков'
                                                , usecols=range(2, 23))
             list_of_columns = list(df_assessment_hard.columns)
-            # del_first_clmn = list_of_columns.pop(0)
             df_new = pd.DataFrame(index=range(0, 17))
-            # print(df_new.columns)
 
-            # extracted_col = df_assessment_hard["Критерий\Сотрудник"]
-            # print(extracted_col)
             df_new.insert(0, "Критерий\Сотрудник", df_assessment_hard["Критерий\Сотрудник"])
-            # print(df_new.columns)
-            # df_assessment_hard['Employee'] = current_file_name
-            # df_assessment_hard_general.append(df_assessment_hard)
             j = -1
             # находясь в файле, разбираем оценки как самого себя, так и коллег, пройдя по всем оценкам всех коллег (колонки = коллеги)
             for current_column in df_assessment_hard.columns:
                 if current_column != 'Критерий\Сотрудник':
                     j = j +1
                     curr_employee = str(list(df_assessment_hard.columns)[j])
-                    # str(list(df_assessment_hard.columns)[j]).split()[0]
                     file_nm_full = str('Output_files/HardSkills/' + str(curr_employee).split()[0] + '.' + str(file.name.split('.')[1]))
-                    print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ' , curr_employee ,' :')
-                    print(str(list(df_assessment_hard.columns)[j]).split()[0])
-                    print(df_assessment_hard.iloc[:,j])
+                    # print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ' , curr_employee ,' :')
 
                     if i == 1:
                         # Создаем файлы на основе пустого ДФ
@@ -102,22 +92,23 @@ if __name__ == '__main__':
                     # Оценка самого себя заносится в свою же колонку своего файла
                     if current_file_name.upper() in str(curr_employee).upper():
                         df_to_update = pd.read_excel(file_nm_full)
-                        print('first:', df_to_update.columns)
-                        print('second:', df_to_update.columns)
                         df_to_update.insert(2, curr_employee,  df_assessment_hard.iloc[:, j])
+                        # Удаление колонки с индексом
+                        df_to_update = df_to_update.loc[:, ~df_to_update.columns.str.contains('^Unnamed')]
                         df_to_update.to_excel(file_nm_full)
-                    # Оценка коллеги заносится в его файл, но с ренеймом/
-                    # Оцениваешь коллегу, значит надо занести колонку в файл коллеги с именем оценивающего
 
+                    # Оцениваешь коллегу, значит надо занести колонку в файл коллеги с именем оценивающего
                     else:
                         # поиск файла коллеги
                         df_to_update = pd.read_excel(file_nm_full)
                         # внесение оценки в файл коллеги (Бунаков оценил - в графу "Бунаков" файла "Бунцикин" помещается оценка)
                         df_to_update.insert(2, current_file_name, df_assessment_hard.iloc[:, j])
+                        # Удаление колонки с индексом
+                        df_to_update = df_to_update.loc[:, ~df_to_update.columns.str.contains('^Unnamed')]
                         # Перезаписываем эксельник с добавленной колонкой
                         df_to_update.to_excel(file_nm_full)
                         df_assessment_hard.iloc[:, j]
-            # print(df_assessment_hard.iloc[:, 1])
+
             hard_skills_list = list(df_assessment_hard.iloc[:, 0])
 
             # print('End hard')
