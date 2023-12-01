@@ -66,7 +66,7 @@ if __name__ == '__main__':
             }
             cur_employee_qna = pd.DataFrame(data, index=[current_file_name])
             qna_transposed_general_pr.append(cur_employee_qna)
-            print('Start hard')
+            print('Start hard for ', current_file_name)
             # достать информацию по оценке своей и коллег-разработчиков HARD
             df_assessment_hard = pd.read_excel(file
                                                , nrows=18
@@ -107,29 +107,90 @@ if __name__ == '__main__':
                         df_to_update = df_to_update.loc[:, ~df_to_update.columns.str.contains('^Unnamed')]
                         # Перезаписываем эксельник с добавленной колонкой
                         df_to_update.to_excel(file_nm_full)
-                        df_assessment_hard.iloc[:, j]
 
             hard_skills_list = list(df_assessment_hard.iloc[:, 0])
 
-            # print('End hard')
+            print('End hard for ', current_file_name)
 
             # достать информацию по оценке своей и коллег-разработчиков SOFT
-            # df_assessment_soft = pd.read_excel(file
-            #                                    , nrows=15
-            #                                    , skiprows=42
-            #                                    , sheet_name='Оценка разработчиков'
-            #                                    , usecols=range(2, 23))
-            # df_assessment_soft['Employee'] = current_file_name
-            # df_assessment_soft_general.append(df_assessment_soft)
+            df_assessment_soft = pd.read_excel(file
+                                               , nrows=15
+                                               , skiprows=42
+                                               , sheet_name='Оценка разработчиков'
+                                               , usecols=range(2, 23))
+            df_assessment_soft['Employee'] = current_file_name
+            df_assessment_soft_general.append(df_assessment_soft)
+            df_new = pd.DataFrame(index=range(0, 14))
+
+            df_new.insert(0, "Критерий\Сотрудник", df_assessment_soft["Критерий\Сотрудник"])
+            print('Start Soft for ', current_file_name)
+            j = -1
+            for current_column in df_assessment_soft.columns:
+                if current_column != 'Критерий\Сотрудник':
+                    j = j + 1
+                    curr_employee = str(list(df_assessment_soft.columns)[j])
+                    file_nm_full = str(
+                        'Output_files/SoftSkills/' + str(curr_employee).split()[0] + '.' + str(file.name.split('.')[1]))
+                    # print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ' , curr_employee ,' :')
+
+                    if i == 1:
+                        # Создаем файлы на основе пустого ДФ
+                        df_new.to_excel(file_nm_full)
+                    # Оценка самого себя заносится в свою же колонку своего файла
+                    if current_file_name.upper() in str(curr_employee).upper():
+                        df_to_update = pd.read_excel(file_nm_full)
+                        df_to_update.insert(2, curr_employee, df_assessment_soft.iloc[:, j])
+                        # Удаление колонки с индексом
+                        df_to_update = df_to_update.loc[:, ~df_to_update.columns.str.contains('^Unnamed')]
+                        df_to_update.to_excel(file_nm_full)
+
+                    # Оцениваешь коллегу, значит надо занести колонку в файл коллеги с именем оценивающего
+                    else:
+                        # поиск файла коллеги
+                        df_to_update = pd.read_excel(file_nm_full)
+                        # внесение оценки в файл коллеги (Бунаков оценил - в графу "Бунаков" файла "Бунцикин" помещается оценка)
+                        df_to_update.insert(2, current_file_name, df_assessment_soft.iloc[:, j])
+                        # Удаление колонки с индексом
+                        df_to_update = df_to_update.loc[:, ~df_to_update.columns.str.contains('^Unnamed')]
+                        # Перезаписываем эксельник с добавленной колонкой
+                        df_to_update.to_excel(file_nm_full)
+            print('End Soft for ', current_file_name)
 
             # инфмормация с листа Cross-assessment
-            # df_cross = pd.read_excel(file
-            #                          , nrows=12
-            #                          , skiprows=7
-            #                          , sheet_name='Cross Разработчик-Аналитик '
-            #                          , usecols=range(2, 29))
+            df_cross = pd.read_excel(file
+                                     , nrows=12
+                                     , skiprows=7
+                                     , sheet_name='Cross Разработчик-Аналитик '
+                                     , usecols=range(2, 29))
             # df_cross['Employee'] = current_file_name
             # df_cross_general.append(df_cross)
+            df_new = pd.DataFrame(index=range(0, 11))
+            df_new.insert(0, "Критерий\Сотрудник", df_cross["Критерий\Сотрудник"])
+            print('Start Cross for ', current_file_name)
+            cross_iter = -1
+            for current_column in df_cross.columns:
+                if current_column != 'Критерий\Сотрудник':
+                    cross_iter = cross_iter + 1
+                    curr_employee = str(list(df_cross.columns)[cross_iter])
+                    file_nm_full = str(
+                        'Output_files/Cross/' + str(curr_employee)+ '.' + str(file.name.split('.')[1]))
+                    print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ' , curr_employee ,' :')
+
+                    if i == 1:
+                        # Создаем файлы на основе пустого ДФ
+                        df_new.to_excel(file_nm_full)
+
+                    # Оцениваешь коллегу, значит надо занести колонку в файл коллеги с именем оценивающего
+                    print('Cross OTHER')
+                    # поиск файла коллеги-аналитика (или разработчика)
+                    df_to_update = pd.read_excel(file_nm_full)
+                    # внесение оценки в файл коллеги (Бунаков оценил - в графу "Бунаков" файла "Бунцикин" помещается оценка)
+                    df_to_update.insert(2, current_file_name, df_cross.iloc[:, cross_iter])
+                    # Удаление колонки с индексом
+                    df_to_update = df_to_update.loc[:, ~df_to_update.columns.str.contains('^Unnamed')]
+                    # Перезаписываем эксельник с добавленной колонкой
+                    df_to_update.to_excel(file_nm_full)
+            print('End Cross for ', current_file_name)
 
     # pd.set_option("display.width", 100)
     # df_qna_general_res = pd.DataFrame(pd.concat(df_qna_general))
