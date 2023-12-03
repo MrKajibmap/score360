@@ -5,6 +5,26 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
+
+def clear_folder(input_folder_path):
+    for current_file_to_remove in os.listdir(Path(input_folder_path)):
+        file_path = os.path.join(Path(input_folder_path), current_file_to_remove)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                print('Будет удален файл: ', file_path)
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                print('Будет удален файл: ', file_path)
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Ошибка при удалении - %s. Причина: %s' % (file_path, e))
+
+def create_file(file_full_path):
+    if not os.path.exists(file_full_path):
+        print("Создание файла ", file_full_path)
+        # Создаем файлы на основе пустого ДФ в 'Output_files/HardSkills/'
+        df_new.to_excel(file_full_path)
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     df_qna_general = []
@@ -18,29 +38,18 @@ if __name__ == '__main__':
     print('ex_check: ', os.path.exists('Templates/Assessment_template.xlsx'))
 
     # Очистка директории с целевыми файлами по хард скиллам
-    for filename in os.listdir(Path('Output_files/HardSkills')):
-        file_path = os.path.join(Path('Output_files/HardSkills'), filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print('Ошибка при удалении - %s. Причина: %s' % (file_path, e))
+    clear_folder('Output_files/HardSkills')
 
-    # # Создание новых файлов для хард скиллов
-    # for file in Path('Input_files').iterdir():
-    #     shutil.copyfile(
-    #         'Templates/Assessment_template.xlsx', os.path.join(Path('Output_files/HardSkills'), file.name))
+    clear_folder('Output_files/Cross')
 
-    files = os.listdir(Path('Input_files'))
-    print(files)
+    clear_folder('Output_files/SoftSkills')
 
     i = 0
     for file in Path('Input_files').iterdir():
-        if file.name != '.DS_Store' and file.name !='':
+        if file.name != '.DS_Store' and file.name != '':
             i = i + 1
             current_file_name = file.name.split('.')[0]
+            # current_file_name = file.name
             print(f"Анализ выполняется для файла '{current_file_name}'.")
             # Достаем информацию по опроснику
             df_qna = pd.read_excel(file
@@ -80,26 +89,42 @@ if __name__ == '__main__':
             j = -1
             # находясь в файле, разбираем оценки как самого себя, так и коллег, пройдя по всем оценкам всех коллег (колонки = коллеги)
             for current_column in df_assessment_hard.columns:
-                if current_column != 'Критерий\Сотрудник':
-                    j = j +1
+                if str(current_column).upper() != str('Критерий\Сотрудник').upper():
+                    j = j + 1
                     curr_employee = str(list(df_assessment_hard.columns)[j])
-                    file_nm_full = str('Output_files/HardSkills/' + str(curr_employee).split()[0] + '.' + str(file.name.split('.')[1]))
-                    # print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ' , curr_employee ,' :')
+                    # Если разбираемая колонка = 'Критерий\Сотрудник', то пропускаем итерацию
+                    if str(curr_employee).upper() == str('Критерий\Сотрудник').upper():
+                        print("Пропускаем итерацию для колонки Критерий\Сотрудник")
+                        continue
+                    # file_nm_full = str('Output_files/HardSkills/' + str(curr_employee).split()[0] + '.' + str(file.name.split('.')[1]))
+                    file_nm_full = str(
+                        'Output_files/HardSkills/' + str(curr_employee) + '.xlsx')
+                    print('file_nm_full = ', file_nm_full)
+                    print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ',
+                          curr_employee, ' :')
 
-                    if i == 1:
-                        # Создаем файлы на основе пустого ДФ
+                    if not os.path.exists(file_nm_full):
+                        print("Создание файла ", file_nm_full)
+                        # Создаем файлы на основе пустого ДФ в 'Output_files/HardSkills/'
                         df_new.to_excel(file_nm_full)
+                    print('Приступаем к дополнению файлов в зависимости от колонки')
                     # Оценка самого себя заносится в свою же колонку своего файла
-                    if current_file_name.upper() in str(curr_employee).upper():
+                    if current_file_name.upper() == str(curr_employee).upper():
+                        print('Имя текущего файла -', current_file_name.upper(), ' совпало с текущей колонкой - ',
+                              str(curr_employee).upper())
                         df_to_update = pd.read_excel(file_nm_full)
-                        df_to_update.insert(2, curr_employee,  df_assessment_hard.iloc[:, j])
+                        df_to_update.insert(2, curr_employee, df_assessment_hard.iloc[:, j])
                         # Удаление колонки с индексом
                         df_to_update = df_to_update.loc[:, ~df_to_update.columns.str.contains('^Unnamed')]
                         df_to_update.to_excel(file_nm_full)
 
                     # Оцениваешь коллегу, значит надо занести колонку в файл коллеги с именем оценивающего
                     else:
+                        print('Имя текущего файла -', current_file_name.upper(), ' НЕ совпало с колонкой - ',
+                              str(curr_employee).upper())
                         # поиск файла коллеги
+                        if not os.path.exists(file_nm_full):
+                            print('Файл отсутствует - ', )
                         df_to_update = pd.read_excel(file_nm_full)
                         # внесение оценки в файл коллеги (Бунаков оценил - в графу "Бунаков" файла "Бунцикин" помещается оценка)
                         df_to_update.insert(2, current_file_name, df_assessment_hard.iloc[:, j])
@@ -127,15 +152,25 @@ if __name__ == '__main__':
             j = -1
             for current_column in df_assessment_soft.columns:
                 if current_column != 'Критерий\Сотрудник':
+
                     j = j + 1
                     curr_employee = str(list(df_assessment_soft.columns)[j])
-                    file_nm_full = str(
-                        'Output_files/SoftSkills/' + str(curr_employee).split()[0] + '.' + str(file.name.split('.')[1]))
-                    # print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ' , curr_employee ,' :')
+                    # Если разбираемая колонка = 'Критерий\Сотрудник', то пропускаем итерацию
+                    if str(curr_employee).upper() == str('Критерий\Сотрудник').upper():
+                        print("Пропускаем итерацию для колонки Критерий\Сотрудник")
+                        continue
 
-                    if i == 1:
-                        # Создаем файлы на основе пустого ДФ
+                    file_nm_full = str(
+                        'Output_files/SoftSkills/' + str(curr_employee) + '.xlsx')
+                    print('file_nm_full = ', file_nm_full)
+                    print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ',
+                          curr_employee, ' :')
+
+                    if not os.path.exists(file_nm_full):
+                        print("Создание файла ", file_nm_full)
+                        # Создаем файлы на основе пустого ДФ в 'Output_files/HardSkills/'
                         df_new.to_excel(file_nm_full)
+
                     # Оценка самого себя заносится в свою же колонку своего файла
                     if current_file_name.upper() in str(curr_employee).upper():
                         df_to_update = pd.read_excel(file_nm_full)
@@ -172,9 +207,14 @@ if __name__ == '__main__':
                 if current_column != 'Критерий\Сотрудник':
                     cross_iter = cross_iter + 1
                     curr_employee = str(list(df_cross.columns)[cross_iter])
+                    # Если разбираемая колонка = 'Критерий\Сотрудник', то пропускаем итерацию
+                    if str(curr_employee).upper() == str('Критерий\Сотрудник').upper():
+                        print("Пропускаем итерацию для колонки Критерий\Сотрудник")
+                        continue
                     file_nm_full = str(
-                        'Output_files/Cross/' + str(curr_employee)+ '.' + str(file.name.split('.')[1]))
-                    print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ' , curr_employee ,' :')
+                        'Output_files/Cross/' + str(curr_employee) + '.' + str(file.name.split('.')[1]))
+                    print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ',
+                          curr_employee, ' :')
 
                     if i == 1:
                         # Создаем файлы на основе пустого ДФ
