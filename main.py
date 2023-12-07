@@ -98,7 +98,6 @@ if __name__ == '__main__':
                 if str(curr_employee).upper() == str('Критерий\Сотрудник').upper():
                     # print("Пропускаем итерацию для колонки Критерий\Сотрудник")
                     continue
-                # file_nm_full = str('Output_files/HardSkills/' + str(curr_employee).split()[0] + '.' + str(file.name.split('.')[1]))
                 file_nm_full = str(
                     'Output_files/HardSkills/' + str(curr_employee) + '.xlsx')
                 # Создание файла в случае его отсутствия
