@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 if __name__ == '__main__':
@@ -47,29 +48,38 @@ if __name__ == '__main__':
             df_current_employee_hard['Sum'] = list_col_sum
             df_current_employee_hard['Avg'] = list_col_avg
             df_current_employee_hard.to_excel(str('Output_files/Results_with_stats/' + file.name))
-        #
+            #
             df_current_employee_with_stat = pd.read_excel(str('Output_files/Results_with_stats/' + file.name))
             df_current_employee_with_stat = df_current_employee_with_stat.loc[:,
-                                                       ~df_current_employee_with_stat.columns.str.contains('^Unnamed')]
+                                            ~df_current_employee_with_stat.columns.str.contains('^Unnamed')]
             count_row = df_current_employee_with_stat.shape[0]  # Gives number of rows
             count_col = df_current_employee_with_stat.shape[1]  # Gives number of columns
 
             df_current_empl = pd.DataFrame(data=df_current_employee_with_stat.loc[1,
-                                               df_current_employee_with_stat.columns.str.contains('^Крит')])
+                                                                                  df_current_employee_with_stat.columns.str.contains(
+                                                                                      '^Крит')])
             df_current_empl['Employee'] = current_employee
             df_current_empl['Total_Score'] = round(df_current_employee_with_stat.iloc[:, count_col - 1].sum(), 1)
             df_current_empl['Total_Score_Cnt'] = round(df_current_employee_with_stat.iloc[:, count_col - 3].mean(), 1)
-            df_current_empl['Hard_Avg_Score'] = round(df_current_employee_with_stat.iloc[0:17, count_col-1].sum(), 1)
-            df_current_empl['Hard_Scores_Cnt'] = round(df_current_employee_with_stat.iloc[0:17, count_col-3].mean(), 1)
+            df_current_empl['Hard_Avg_Score'] = round(df_current_employee_with_stat.iloc[0:17, count_col - 1].sum(), 1)
+            df_current_empl['Hard_Scores_Cnt'] = round(df_current_employee_with_stat.iloc[0:17, count_col - 3].mean(),
+                                                       1)
             df_current_empl['Soft_Avg_Score'] = round(df_current_employee_with_stat.iloc[17:31, count_col - 1].sum(), 1)
-            df_current_empl['Soft_Scores_Cnt'] = round(df_current_employee_with_stat.iloc[17:31, count_col - 3].mean(), 1)
+            df_current_empl['Soft_Scores_Cnt'] = round(df_current_employee_with_stat.iloc[17:31, count_col - 3].mean(),
+                                                       1)
+            new_df = pd.read_excel('Output_files/Results_with_stats/' + file.name)
+            new_df = new_df.loc[:,
+                     new_df.columns.str.contains(str('^' + str(file.name).split(sep='.')[0]))]
+            df_current_empl['Self_Hard'] = new_df.iloc[0:17, 0].sum()
+            df_current_empl['Self_Soft'] = new_df.iloc[17:31, 0].sum()
+            df_current_empl['Self_Total'] = new_df.iloc[0:31, 0].sum()
             df_current_empl.to_excel(str('Output_files/Templ/' + file.name))
-            print(df_current_empl)
+            # print(df_current_empl)
             if main_iter == 1:
                 general_score_stat_df = df_current_empl
-                print(general_score_stat_df)
-                print('PRIVET')
+                # print(general_score_stat_df)
+                # print('PRIVET')
             else:
                 general_score_stat_df = pd.concat([general_score_stat_df, df_current_empl])
-                print(general_score_stat_df)
-    general_score_stat_df.to_excel(str('Output_files/Templ/general_score_stat_df.xlsx'))
+                # print(general_score_stat_df)
+        general_score_stat_df.to_excel(str('Output_files/Templ/general_score_stat_df.xlsx'))

@@ -200,15 +200,15 @@ if __name__ == '__main__':
                         continue
                     file_nm_full = str(
                         'Output_files/Cross/' + str(curr_employee) + '.' + str(file.name.split('.')[1]))
-                    print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ',
-                          curr_employee, ' :')
+                    # print('Разбираем оценки из файла - ', current_file_name, ' ;', 'Значение текущей колонки: ',
+                    #       curr_employee, ' :')
 
                     if i == 1:
                         # Создаем файлы на основе пустого ДФ
                         df_new.to_excel(file_nm_full)
 
                     # Оцениваешь коллегу, значит надо занести колонку в файл коллеги с именем оценивающего
-                    print('Cross OTHER')
+                    # print('Cross OTHER')
                     # поиск файла коллеги-аналитика (или разработчика)
                     df_to_update = pd.read_excel(file_nm_full)
                     # внесение оценки в файл коллеги (Бунаков оценил - в графу "Бунаков" файла "Бунцикин" помещается оценка)
